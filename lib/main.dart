@@ -40,7 +40,7 @@ class LoginPage extends StatelessWidget {
           if (state is LoginFailure) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
           } else if (state is LoginSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Login Sucess")));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Login Success")));
           }
         },
         builder: (context, state) {

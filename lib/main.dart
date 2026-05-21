@@ -37,57 +37,93 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => CounterCubit(),
-      child: BlocConsumer<CounterCubit, int>(
-        listener: (context, state) {
-          if (state == 5) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Counter = 5"),
-                duration: Duration(milliseconds: 20),
-              ),
-            );
-          }
-        },
-        builder: (BuildContext context, int state) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(title),
-              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            ),
-            body: Center(
-              child: BlocBuilder<CounterCubit, int>(
-                builder: (context, state) {
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(title),
+          backgroundColor: Theme
+              .of(context)
+              .colorScheme
+              .inversePrimary,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BlocSelector<CounterCubit, CounterState,int>(
+                selector: (state)=>state.countA,
+                builder: (context, countA) {
+                  print("Counter A");
                   return Text(
-                    state.toString(),
-                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 25),
+                    'Counter A= ${countA.toString()}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 25,
+                    ),
                   );
                 },
               ),
-            ),
-            floatingActionButton: BlocBuilder<CounterCubit, int>(
-              builder: (context, state) {
-                return Column(
+              BlocSelector<CounterCubit, CounterState,int>(
+                selector: (state)=> state.countB,
+                builder: (context, countB) {
+                  print("Counter b");
+                  return Text(
+                    'Counter B= ${countB.toString()}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 25,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: BlocBuilder<CounterCubit, CounterState>(
+          builder: (context, state) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     FloatingActionButton(
                       onPressed: () {
-                        context.read<CounterCubit>().increment();
+                        context.read<CounterCubit>().incrementA();
                       },
                       child: Icon(Icons.add),
                     ),
                     const SizedBox(height: 10),
                     FloatingActionButton(
                       onPressed: () {
-                        context.read<CounterCubit>().decrement();
+                        context.read<CounterCubit>().decrementA();
                       },
                       child: Icon(Icons.minimize),
                     ),
                   ],
-                );
-              },
-            ),
-          );
-        },
+                ),
+
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FloatingActionButton(
+                      onPressed: () {
+                        context.read<CounterCubit>().incrementB();
+                      },
+                      child: Icon(Icons.add),
+                    ),
+                    const SizedBox(height: 10),
+                    FloatingActionButton(
+                      onPressed: () {
+                        context.read<CounterCubit>().decrementB();
+                      },
+                      child: Icon(Icons.minimize),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:state_management_bloc_cubit/controllers/task_bloc.dart';
 import 'package:state_management_bloc_cubit/controllers/task_event.dart';
 import 'package:state_management_bloc_cubit/controllers/task_state.dart';
 
 import 'models/task_model.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: HydratedStorageDirectory(
+      (await getTemporaryDirectory()).path,
+    ),
+  );
   runApp(const MyApp());
 }
 
@@ -64,27 +72,33 @@ class MyHomePage extends StatelessWidget {
                   child: const Text("Add task"),
                 ),
                 Expanded(
-                  child: state.taskList.isEmpty?Center(child: const Text("No tasks"),): ListView.builder(
-                    itemCount: state.taskList.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final TaskModel task = state.taskList[index];
-                      return ListTile(
-                        leading: Checkbox(
-                          value: task.isCompleted,
-                          onChanged: (value) {
-                            context.read<TaskBloc>().add(TaskToggleEvent(task.id));
+                  child: state.taskList.isEmpty
+                      ? Center(child: const Text("No tasks"))
+                      : ListView.builder(
+                          itemCount: state.taskList.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final TaskModel task = state.taskList[index];
+                            return ListTile(
+                              leading: Checkbox(
+                                value: task.isCompleted,
+                                onChanged: (value) {
+                                  context.read<TaskBloc>().add(
+                                    TaskToggleEvent(task.id),
+                                  );
+                                },
+                              ),
+                              title: Text(task.title),
+                              trailing: IconButton(
+                                onPressed: () {
+                                  context.read<TaskBloc>().add(
+                                    TaskRemoveEvent(task.id),
+                                  );
+                                },
+                                icon: Icon(Icons.delete),
+                              ),
+                            );
                           },
                         ),
-                        title: Text(task.title),
-                        trailing: IconButton(
-                          onPressed: () {
-                            context.read<TaskBloc>().add(TaskRemoveEvent(task.id));
-                          },
-                          icon: Icon(Icons.delete),
-                        ),
-                      );
-                    },
-                  ),
                 ),
               ],
             );

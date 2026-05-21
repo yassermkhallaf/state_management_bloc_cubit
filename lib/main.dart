@@ -37,54 +37,57 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => CounterCubit(),
-      child: BlocListener<CounterCubit, int>(
+      child: BlocConsumer<CounterCubit, int>(
         listener: (context, state) {
           if (state == 5) {
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Counter = 5")));
+              SnackBar(
+                content: Text("Counter = 5"),
+                duration: Duration(milliseconds: 20),
+              ),
+            );
           }
         },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(title),
-            backgroundColor: Theme
-                .of(context)
-                .colorScheme
-                .inversePrimary,
-          ),
-          body: Center(
-            child: BlocBuilder<CounterCubit, int>(
+        builder: (BuildContext context, int state) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(title),
+              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            body: Center(
+              child: BlocBuilder<CounterCubit, int>(
+                builder: (context, state) {
+                  return Text(
+                    state.toString(),
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 25),
+                  );
+                },
+              ),
+            ),
+            floatingActionButton: BlocBuilder<CounterCubit, int>(
               builder: (context, state) {
-                return Text(
-                  state.toString(),
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 25),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FloatingActionButton(
+                      onPressed: () {
+                        context.read<CounterCubit>().increment();
+                      },
+                      child: Icon(Icons.add),
+                    ),
+                    const SizedBox(height: 10),
+                    FloatingActionButton(
+                      onPressed: () {
+                        context.read<CounterCubit>().decrement();
+                      },
+                      child: Icon(Icons.minimize),
+                    ),
+                  ],
                 );
               },
             ),
-          ),
-          floatingActionButton: BlocBuilder<CounterCubit, int>(
-            builder: (context, state) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FloatingActionButton(
-                    onPressed: () {
-                      context.read<CounterCubit>().increment();
-                    },
-                    child: Icon(Icons.add),
-                  ),
-                  const SizedBox(height: 10),
-                  FloatingActionButton(
-                    onPressed: () {
-                      context.read<CounterCubit>().decrement();
-                    },
-                    child: Icon(Icons.minimize),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
+          );
+        },
       ),
     );
   }

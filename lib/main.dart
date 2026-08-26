@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_sate_management_bloc_cubit/controller/cubit/task_cubit.dart';
-
-import 'controller/todo_bloc.dart';
-import 'models/todo_model.dart';
+import 'package:flutter_sate_management_bloc_cubit/controllers/product_cubit.dart';
+import 'package:flutter_sate_management_bloc_cubit/core/widgets/custom_cached_network_image.dart';
 
 import 'package:uuid/uuid.dart';
+
+import 'models/product_model.dart';
 
 var uuid = Uuid();
 
@@ -18,224 +18,111 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomeScreenBloc());
+    return MaterialApp(home: HomeScreen());
   }
 }
 
-class HomeScreenBloc extends StatelessWidget {
-  HomeScreenBloc({super.key});
-
-  TextEditingController controller = TextEditingController();
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => TodoBloc(),
+      create: (context) => ProductCubit()..callApi(),
       child: Scaffold(
+        //backgroundColor: Colors.black.withValues(alpha: .3),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 50,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          decoration: InputDecoration(
-                            hintText: "New Note",
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintStyle: TextStyle(color: Colors.grey.shade400),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: Colors.grey.shade500, width: 1),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: Colors.green.shade500, width: 1),
-                            ),
-                          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: BlocBuilder<ProductCubit, ProductState>(
+                builder: (BuildContext context, ProductState state) {
+                  return switch (state) {
+                    ProductLoading() => Center(child: CircularProgressIndicator()),
+                    ProductLoaded() => Center(
+                      child: GridView.builder(
+                        itemCount: state.productList.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: .6,
                         ),
-                      ),
-                      SizedBox(width: 10),
-                      SizedBox(
-                        height: double.infinity,
-                        child: BlocBuilder<TodoBloc, TodoState>(
-                          builder: (context, state) {
-                            return ElevatedButton(
-                              onPressed: () {
-                                context.read<TodoBloc>().add(
-                                  TodoAdding(
-                                    TodoModel(id: uuid.v4(), content: controller.text.trim()),
+                        itemBuilder: (BuildContext context, int index) {
+                          final ProductModel product = state.productList[index];
+                          return ClipRRect(
+                            borderRadius: BorderRadiusGeometry.circular(10),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Stack(
+                                    children: [
+                                      CustomCachedNetworkImage(imagePath: product.image),
+                                      if(product.price < 100)Positioned(
+                                        child: Container(
+                                          color: Colors.red,
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(horizontal: 8,vertical: 4),
+                                            child: Text("20%",style: TextStyle(color: Colors.white),),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.circular(10),
                                 ),
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: Text("Add"),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                BlocBuilder<TodoBloc, TodoState>(
-                  builder: (context, state) {
-                    return Expanded(
-                      child: ListView.builder(
-                        itemCount: state.todoList.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          print(state.todoList);
-                          final TodoModel todo = state.todoList[index];
-                          print("Todo: ${todo.isChecked}");
-                          return ListTile(
-                            key: ValueKey(todo.id),
-                            leading: Checkbox(
-                              value: todo.isChecked,
-                              onChanged: (value) {
-                                context.read<TodoBloc>().add(TodoToggle(todo.id));
-                              },
-                            ),
-                            title: Text(
-                              todo.content,
-                              style: TextStyle(
-                                color: todo.isChecked ? Colors.grey : Colors.black,
-                                decoration: todo.isChecked
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              onPressed: () {
-                                context.read<TodoBloc>().add(TodoRemoving(todo.id));
-                              },
-                              icon: Icon(Icons.delete, color: Colors.red),
+                                Text(
+                                  product.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          ...List.generate(5, (index) {
+                                            return Icon(
+                                              index < product.rate.rate.round()
+                                                  ? Icons.star
+                                                  : Icons.star_border,
+                                              color: Colors.amber,
+                                              size: 20,
+                                            );
+                                          }),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      "${product.price.toString()} \$",
+                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                                    ),
+                                  ],
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {},
+                                  style: ElevatedButton.styleFrom(
+                                    minimumSize: Size.fromHeight(30),
+                                    backgroundColor: Colors.black,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  child: Text("Buy Now"),
+                                ),
+                              ],
                             ),
                           );
                         },
                       ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class HomeScreenCubit extends StatelessWidget {
-  HomeScreenCubit({super.key});
-
-  TextEditingController controller = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TaskCubit(),
-      child: Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 50,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          decoration: InputDecoration(
-                            hintText: "New Note",
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintStyle: TextStyle(color: Colors.grey.shade400),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: Colors.grey.shade500, width: 1),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: Colors.green.shade500, width: 1),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      SizedBox(
-                        height: double.infinity,
-                        child: BlocBuilder<TaskCubit, TaskState>(
-                          builder: (context, state) {
-                            return ElevatedButton(
-                              onPressed: () {
-                                context.read<TaskCubit>().addTask(controller.text.trim());
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.circular(10),
-                                ),
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: Text("Add"),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                BlocBuilder<TaskCubit, TaskState>(
-                  builder: (context, state) {
-                    return Expanded(
-                      child: ListView.builder(
-                        itemCount: state.taskList.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          print(state.taskList);
-                          final TodoModel todo = state.taskList[index];
-                          print("Todo: ${todo.isChecked}");
-                          return ListTile(
-                            key: ValueKey(todo.id),
-                            leading: Checkbox(
-                              value: todo.isChecked,
-                              onChanged: (value) {
-                                context.read<TaskCubit>().toggleTask(todo.id);
-                              },
-                            ),
-                            title: Text(
-                              todo.content,
-                              style: TextStyle(
-                                color: todo.isChecked ? Colors.grey : Colors.black,
-                                decoration: todo.isChecked
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              onPressed: () {
-                                context.read<TaskCubit>().removeTask(todo.id);
-                              },
-                              icon: Icon(Icons.delete, color: Colors.red),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ],
+                    ),
+                    ProductError() => Center(
+                      child: Text(state.errorMessage, style: TextStyle(color: Colors.red)),
+                    ),
+                  };
+                },
+              ),
             ),
           ),
         ),

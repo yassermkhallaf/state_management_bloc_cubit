@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_sate_management_bloc_cubit/models/todo_model.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:meta/meta.dart';
 
 part 'todo_event.dart';
 
 part 'todo_state.dart';
 
-class TodoBloc extends Bloc<TodoEvent, TodoState> {
+class TodoBloc extends HydratedBloc<TodoEvent, TodoState> {
   TodoBloc() : super(TodoInitial()) {
     on<TodoAdding>(_addTodo);
     on<TodoToggle>(_toggleTodo);
@@ -19,6 +20,7 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
   FutureOr<void> _addTodo(TodoAdding event, Emitter<TodoState> emit) {
     final TodoModel todo = event.todo;
     print(todo.id);
+    print("Sate: ${state.todoList}");
     final List<TodoModel> updatedList = [...state.todoList, todo];
     emit(TodoUpdate(updatedList));
   }
@@ -36,5 +38,17 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
   FutureOr<void> _removeTodo(TodoRemoving event, Emitter<TodoState> emit) {
     final List<TodoModel> updatedList = state.todoList.where((e) => e.id != event.id).toList();
     emit(TodoUpdate(updatedList));
+  }
+
+  @override
+  TodoState? fromJson(Map<String, dynamic> json) {
+    print("JSON: $json");
+    return TodoUpdate((json["todoList"] as List).map((e)=>TodoModel.fromMap(e)).toList());
+  }
+
+  @override
+  Map<String, dynamic>? toJson(TodoState state) {
+    print("HERE");
+    return {"todoList":state.todoList.map((e)=>e.toMap()).toList()};
   }
 }

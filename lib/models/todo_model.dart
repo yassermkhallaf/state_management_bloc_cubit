@@ -21,4 +21,21 @@ class TodoModel extends Equatable {
       isChecked: isChecked ?? this.isChecked,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': this.id,
+      'content': this.content,
+      'isChecked': this.isChecked,
+    };
+  }
+
+  factory TodoModel.fromMap(Map<String, dynamic> map) {
+    return TodoModel(
+      id: map['id'] as String,
+      content: map['content'] as String,
+      isChecked: map['isChecked'] as bool,
+    );
+  }
+
 }

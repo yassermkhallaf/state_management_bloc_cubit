@@ -71,26 +71,33 @@ class HomeScreenBloc extends StatelessWidget {
                       SizedBox(width: 10),
                       SizedBox(
                         height: double.infinity,
-                        child: BlocBuilder<TodoBloc, TodoState>(
-                          builder: (context, state) {
-                            return ElevatedButton(
-                              onPressed: () {
-                                context.read<TodoBloc>().add(
-                                  TodoAdding(
-                                    TodoModel(id: uuid.v4(), content: controller.text.trim()),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadiusGeometry.circular(10),
-                                ),
-                                backgroundColor: Colors.redAccent,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: Text("Add"),
-                            );
+                        child: BlocListener<TodoBloc, TodoState>(
+                          listener: (context, state) {
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(SnackBar(content: Text('Updated')));
                           },
+                          child: BlocBuilder<TodoBloc, TodoState>(
+                            builder: (context, state) {
+                              return ElevatedButton(
+                                onPressed: () {
+                                  context.read<TodoBloc>().add(
+                                    TodoAdding(
+                                      TodoModel(id: uuid.v4(), content: controller.text.trim()),
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadiusGeometry.circular(10),
+                                  ),
+                                  backgroundColor: Colors.redAccent,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text("Add"),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
